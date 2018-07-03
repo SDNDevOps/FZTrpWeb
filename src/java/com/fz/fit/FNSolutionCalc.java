@@ -72,7 +72,7 @@ class FNSolutionCalc {
             calcRunningTotals(curJob, r);
             
             // calc constraints
-            boolean custTimeWindowOK = checkCustTimeWindow(curJob);
+            boolean custTimeWindowOK = checkCustTimeWindow(curJob, r);
             boolean tripDistOK = checkTripDist(curJob, r); 
             boolean agentEndTimeOK = calcAgentEndTrip(curJob, r);
             boolean kgOK = r.totalKg < r.agent.maxKg;
