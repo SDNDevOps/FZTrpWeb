@@ -26,7 +26,7 @@ public class FNRunner {
         sol = (new FNInitialSolutionMaker()).makeInitialSolution(sol);
 
         // do heuristic
-        sol = (new FNSimSteel()).go(sol);
+        //sol = (new FNSimSteel()).go(sol);
         
         // output
         (new FNAlgoOutputer()).writeIt(sol);
