@@ -72,7 +72,7 @@ class FNSolutionCalc {
             calcRunningTotals(curJob, r);
             
             // calc constraints
-            boolean custTimeWindowOK = checkCustTimeWindow(curJob, r);
+            boolean custTimeWindowOK = checkCustTimeWindow(curJob);
             boolean tripDistOK = checkTripDist(curJob, r); 
             boolean agentEndTimeOK = calcAgentEndTrip(curJob, r);
             boolean kgOK = r.totalKg < r.agent.maxKg;
@@ -94,26 +94,13 @@ class FNSolutionCalc {
             return r.sol.isFeasible;
     }
 
-    private static boolean checkCustTimeWindow(FNJob curJob, FNRoute r) {
-        
-        //boolean isFirstJob = false;
-        boolean b = false;
-        FNJob firstJob = r.jobs.get(0);
-        
-        curJob.custDlv.timeWindowStart = curJob.custDlv.timeWindowStart.length() < 5?
-                curJob.custDlv.timeWindowStart + "0" : curJob.custDlv.timeWindowStart;
-        
-        if (firstJob.custDlv.custID.equals(curJob.custDlv.custID)){
-            //from depo if come earlier than shop open                    
-            
-            b = (FZUtil.clockToMin(curJob.custDlv.timeWindowStart) >= curJob.arriveTime)
-                    && (curJob.arriveTime <= FZUtil.clockToMin(curJob.custDlv.timeWindowEnd));
-            
-        }else{
-            b = (FZUtil.clockToMin(curJob.custDlv.timeWindowStart) <= curJob.arriveTime)
-                    && (curJob.arriveTime <= FZUtil.clockToMin(curJob.custDlv.timeWindowEnd));
-        }
-        
+    private static boolean checkCustTimeWindow(FNJob curJob) {
+        boolean b = (FZUtil.clockToMin(curJob.custDlv.timeWindowStart)
+                <= curJob.arriveTime)
+                && 
+                (curJob.arriveTime 
+                <= FZUtil.clockToMin(curJob.custDlv.timeWindowEnd))
+                ;
         return b;
     }
 
