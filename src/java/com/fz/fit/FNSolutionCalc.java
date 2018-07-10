@@ -112,8 +112,7 @@ class FNSolutionCalc {
         if (r.jobs.indexOf(curJob) == 0){
             if(r.sol.vr.cx.params.getInt("DefaultDistance") == 0)
                 //if Unconstrain
-                b = curJob.beforeTripDist.distMtr > 
-                        25 * 1000;
+                b = true;
             else if (r.jobs.indexOf(curJob) > 0)
                 b = curJob.beforeTripDist.distMtr <=
                         r.sol.vr.cx.params.getInt("DefaultDistance") 
