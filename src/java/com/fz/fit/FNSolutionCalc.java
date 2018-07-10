@@ -94,26 +94,13 @@ class FNSolutionCalc {
             return r.sol.isFeasible;
     }
 
-    private static boolean checkCustTimeWindow(FNJob curJob, FNRoute r) {
-        
-        //boolean isFirstJob = false;
-        boolean b = false;
-        FNJob firstJob = r.jobs.get(0);
-        
-        curJob.custDlv.timeWindowStart = curJob.custDlv.timeWindowStart.length() < 5?
-                curJob.custDlv.timeWindowStart + "0" : curJob.custDlv.timeWindowStart;
-        
-        if (firstJob.custDlv.custID.equals(curJob.custDlv.custID)){
-            //from depo if come earlier than shop open                    
-            
-            b = (FZUtil.clockToMin(curJob.custDlv.timeWindowStart) >= curJob.arriveTime)
-                    && (curJob.arriveTime <= FZUtil.clockToMin(curJob.custDlv.timeWindowEnd));
-            
-        }else{
-            b = (FZUtil.clockToMin(curJob.custDlv.timeWindowStart) <= curJob.arriveTime)
-                    && (curJob.arriveTime <= FZUtil.clockToMin(curJob.custDlv.timeWindowEnd));
-        }
-        
+    private static boolean checkCustTimeWindow(FNJob curJob) {
+        boolean b = (FZUtil.clockToMin(curJob.custDlv.timeWindowStart)
+                <= curJob.arriveTime)
+                && 
+                (curJob.arriveTime 
+                <= FZUtil.clockToMin(curJob.custDlv.timeWindowEnd))
+                ;
         return b;
     }
 
@@ -122,11 +109,16 @@ class FNSolutionCalc {
         boolean b = true;
         
         // if not first trip, check max distance
-        if (r.jobs.indexOf(curJob) > 0)
-            b = curJob.beforeTripDist.distMtr < 
-                r.sol.vr.cx.params.getInt("DefaultDistance") 
-                * 1000;
-        
+        if (r.jobs.indexOf(curJob) > 0){
+            if(r.sol.vr.cx.params.getInt("DefaultDistance") == 0)
+                //if Unconstrain
+                b = true;
+            else if (r.jobs.indexOf(curJob) > 0)
+                b = curJob.beforeTripDist.distMtr <=
+                        r.sol.vr.cx.params.getInt("DefaultDistance") 
+                        * 1000;
+            System.out.println("DefaultDistance()"+r.sol.vr.cx.params.getInt("DefaultDistance"));
+        }
         return b;
     }
 
