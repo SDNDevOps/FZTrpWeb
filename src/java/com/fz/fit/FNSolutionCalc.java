@@ -109,7 +109,7 @@ class FNSolutionCalc {
         boolean b = true;
         
         // if not first trip, check max distance
-        if (r.jobs.indexOf(curJob) == 0){
+        if (r.jobs.indexOf(curJob) > 0){
             if(r.sol.vr.cx.params.getInt("DefaultDistance") == 0)
                 //if Unconstrain
                 b = true;
