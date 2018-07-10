@@ -109,11 +109,16 @@ class FNSolutionCalc {
         boolean b = true;
         
         // if not first trip, check max distance
-        if (r.jobs.indexOf(curJob) > 0)
-            b = curJob.beforeTripDist.distMtr < 
-                r.sol.vr.cx.params.getInt("DefaultDistance") 
-                * 1000;
-        
+        if (r.jobs.indexOf(curJob) == 0){
+            if(r.sol.vr.cx.params.getInt("DefaultDistance") == 0)
+                //if Unconstrain
+                b = true;
+            else if (r.jobs.indexOf(curJob) > 0)
+                b = curJob.beforeTripDist.distMtr <=
+                        r.sol.vr.cx.params.getInt("DefaultDistance") 
+                        * 1000;
+            System.out.println("DefaultDistance()"+r.sol.vr.cx.params.getInt("DefaultDistance"));
+        }
         return b;
     }
 
