@@ -269,10 +269,10 @@
                 "			lon2,\n" +
                 "			lat2,\n" +
                 "			dist,\n" +
-				"			dur,\n" +
+                "			dur,\n" +
                 "			SUBSTRING( from1, 1, 10 ) AS from1,\n" +
                 "			SUBSTRING( to1, 1, 10 ) AS to1\n" +
-				"		FROM\n" +
+                "		FROM\n" +
                 "			TMS_CostDist\n" +
                 "	) cost2 ON\n" +
                 "	cost1.lon1 = cost2.lon1\n" +
@@ -627,47 +627,39 @@
 	
 	public void getParams(String runID) throws Exception{
         String sql = "SELECT\n" +
-                "	pa.value,\n" +
-                "	ps.value,\n" +
-				"	pd.value,\n" +
-				"	pf.value,\n" +
-				"	pg.value,\n" +
-				"	ph.value\n" +
+                "	pa.param, pa.value\n" +
                 "FROM\n" +
                 "	BOSNET1.dbo.TMS_PreRouteParams pa\n" +
-				"LEFT OUTER JOIN BOSNET1.dbo.TMS_Progress pj on" +
-				"	pj.RunId = pa.RunId\n" +
-                "LEFT OUTER JOIN BOSNET1.dbo.TMS_PreRouteParams ps ON\n" +
-                "	ps.param = 'secondPriorityUnassignedPenalty'\n" +
-				"	and ps.RunId = pj.RunId\n" +
-				"LEFT OUTER JOIN BOSNET1.dbo.TMS_PreRouteParams pd ON\n" +
-                "	pd.param = 'maxDestInAPI'\n" +
-				"	and pd.RunId = pj.RunId\n" +
-				"LEFT OUTER JOIN BOSNET1.dbo.TMS_PreRouteParams pf ON\n" +
-                "	pf.param = 'DefaultDistance'\n" +
-				"	and pf.RunId = pj.RunId\n" +
-				"LEFT OUTER JOIN BOSNET1.dbo.TMS_PreRouteParams pg ON\n" +
-                "	pg.param = 'fridayBreak'\n" +
-				"	and pg.RunId = pj.RunId\n" +
-				"LEFT OUTER JOIN BOSNET1.dbo.TMS_PreRouteParams ph ON\n" +
-                "	ph.param = 'defaultBreak'\n" +
-				"	and ph.RunId = pj.RunId\n" +
+                "LEFT OUTER JOIN BOSNET1.dbo.TMS_Progress pj on" +
+                "	pj.OriRunId = pa.RunId\n" +
                 "WHERE\n" +
-                "	pa.param = 'firstPriorityUnassignedPenalty'\n" +
-				"	and pa.RunId = '"+runID+"';";
-				System.out.println(sql);
+                "	pa.RunId = '"+runID+"';";
+        System.out.println(sql);
         try (Connection con = (new Db()).getConnection("jdbc/fztms");
                 PreparedStatement ps = con.prepareStatement(sql)){
 
             try (ResultSet rs = ps.executeQuery()){
                 while (rs.next()) {
-                    int i = 1;
-                    firstPriority = Double.parseDouble(FZUtil.getRsString(rs, i++, ""));
+                    //int i = 1;
+                    /*firstPriority = Double.parseDouble(FZUtil.getRsString(rs, i++, ""));
                     secondPriority = Double.parseDouble(FZUtil.getRsString(rs, i++, ""));
-					maxDestInAPI = Integer.parseInt(FZUtil.getRsString(rs, i++, ""));
-					defaultDistance = Double.parseDouble(FZUtil.getRsString(rs, i++, ""));
-					fridayBreak = Integer.parseInt(FZUtil.getRsString(rs, i++, ""));
-					defaultBreak = Integer.parseInt(FZUtil.getRsString(rs, i++, ""));
+                    maxDestInAPI = Integer.parseInt(FZUtil.getRsString(rs, i++, ""));
+                    defaultDistance = Double.parseDouble(FZUtil.getRsString(rs, i++, ""));
+                    fridayBreak = Integer.parseInt(FZUtil.getRsString(rs, i++, ""));
+                    defaultBreak = Integer.parseInt(FZUtil.getRsString(rs, i++, ""));*/
+                    String str = rs.getString("param");
+                    if(str.equalsIgnoreCase("firstPriorityUnassignedPenalty"))
+                        firstPriority = Double.parseDouble(rs.getString("value"));
+                    else if(str.equalsIgnoreCase("secondPriorityUnassignedPenalty"))
+                        secondPriority = Double.parseDouble(rs.getString("value"));
+                    else if(str.equalsIgnoreCase("maxDestInAPI"))
+                        maxDestInAPI = Integer.parseInt(rs.getString("value"));
+                    else if(str.equalsIgnoreCase("DefaultDistance"))
+                        defaultDistance = Double.parseDouble(rs.getString("value"));
+                    else if(str.equalsIgnoreCase("fridayBreak"))
+                       fridayBreak = Integer.parseInt(rs.getString("value"));
+                    else if(str.equalsIgnoreCase("defaultBreak"))
+                        defaultBreak = Integer.parseInt(rs.getString("value"));
                 }
             }
             //System.out.println(firstPriority * secondPriority);
@@ -965,106 +957,106 @@
         
         List<FZCustDelivery> cds = new ArrayList<FZCustDelivery>();
         String sql = "select\n" +
-				"	a.Customer_ID,\n" +
-				"	q.DO_Number,\n" +
-				"	a.Long,\n" +
-				"	a.Lat,\n" +
-				"	q.Customer_priority,\n" +
-				"	a.Service_time,\n" +
-				"	CONVERT(VARCHAR(5),(CASE\n" +
-				"		WHEN DATEDIFF(\n" +
-				"			HOUR,\n" +
-				"			CAST(\n" +
-				"				a.deliv_start AS TIME\n" +
-				"			),\n" +
-				"			CAST(\n" +
-				"				'12:00' AS TIME\n" +
-				"			)\n" +
-				"		)< 1 THEN DATEADD(\n" +
-				"			HOUR,\n" +
-				"			- 1,\n" +
-				"			CAST(\n" +
-				"				a.deliv_start AS TIME\n" +
-				"			)\n" +
-				"		)\n" +
-				"		ELSE CAST(\n" +
-				"			a.deliv_start AS TIME\n" +
-				"		)\n" +
-				"	END ),\n" +
-				"	108 ) as deliv_start,\n" +
-				"	CONVERT(VARCHAR(5),(CASE\n" +
-				"		WHEN DATEDIFF(\n" +
-				"			HOUR,\n" +
-				"			CAST(\n" +
-				"				a.deliv_end AS TIME\n" +
-				"			),\n" +
-				"			CAST(\n" +
-				"				'12:00' AS TIME\n" +
-				"			)\n" +
-				"		)< 1 THEN DATEADD(\n" +
-				"			HOUR,\n" +
-				"			- 1,\n" +
-				"			CAST(\n" +
-				"				a.deliv_end AS TIME\n" +
-				"			)\n" +
-				"		)\n" +
-				"		ELSE CAST(\n" +
-				"			a.deliv_end AS TIME\n" +
-				"		)\n" +
-				"	END ),\n" +
-				"	108 ) as deliv_end,\n" +
-				"	a.vehicle_type_list,\n" +
-				"	sum( a.total_kg ) total_kg,\n" +
-				"	sum( a.total_cubication ) total_cubication,\n" +
-				"	a.DeliveryDeadline,\n" +
-				"	a.DayWinStart,\n" +
-				"	a.DayWinEnd\n" +
-				"from\n" +
-				"	BOSNET1.dbo.TMS_PreRouteJob a inner join(\n" +
-				"		select\n" +
-				"			a.RunId,\n" +
-				"			a.customer_id,\n" +
-				"			count( a.DO_Number ) DO_Number,\n" +
-				"			MIN( Customer_priority ) Customer_priority\n" +
-				"		from\n" +
-				"			(\n" +
-				"				select\n" +
-				"					distinct RunId,\n" +
-				"					customer_id,\n" +
-				"					DO_Number,\n" +
-				"					Customer_priority\n" +
-				"				from\n" +
-				"					BOSNET1.dbo.TMS_PreRouteJob\n" +
-				"				where\n" +
-				"					isActive = '1'\n" +
-				"					and Is_Edit = 'edit'\n" +
-				"					and Is_Exclude = 'inc'\n" +
-				"			) a\n" +
-				"		group by\n" +
-				"			a.RunId,\n" +
-				"			a.customer_id\n" +
-				"	) q on\n" +
-				"	a.RunId = q.RunId\n" +
-				"	and a.Customer_ID = q.Customer_ID\n" +
-				"where\n" +
-				"	a.RunId = '" + cx.runID + "'\n" +
-				"	and a.isActive = '1'\n" +
-				"	and a.Is_Edit = 'edit'\n" +
-				"	and a.Is_Exclude = 'inc'\n" +
-				"group by\n" +
-				"	a.Customer_ID,\n" +
-				"	q.DO_Number,\n" +
-				"	a.Long,\n" +
-				"	a.Lat,\n" +
-				"	q.Customer_priority,\n" +
-				"	a.Service_time,\n" +
-				"	a.deliv_start,\n" +
-				"	a.deliv_end,\n" +
-				"	a.vehicle_type_list,\n" +
-				"	a.DeliveryDeadline,\n" +
-				"	a.DayWinStart,\n" +
-				"	a.DayWinEnd;";
-				System.out.println("sql " + sql);
+                "	a.Customer_ID,\n" +
+                "	q.DO_Number,\n" +
+                "	a.Long,\n" +
+                "	a.Lat,\n" +
+                "	q.Customer_priority,\n" +
+                "	a.Service_time,\n" +
+                "	MIN(CONVERT(VARCHAR(5),(CASE\n" +
+                "		WHEN DATEDIFF(\n" +
+                "			HOUR,\n" +
+                "			CAST(\n" +
+                "				a.deliv_start AS TIME\n" +
+                "			),\n" +
+                "			CAST(\n" +
+                "				'12:00' AS TIME\n" +
+                "			)\n" +
+                "		)< 1 THEN DATEADD(\n" +
+                "			HOUR,\n" +
+                "			- 1,\n" +
+                "			CAST(\n" +
+                "				a.deliv_start AS TIME\n" +
+                "			)\n" +
+                "		)\n" +
+                "		ELSE CAST(\n" +
+                "			a.deliv_start AS TIME\n" +
+                "		)\n" +
+                "	END ),\n" +
+                "	108 )) as deliv_start,\n" +
+                "	MAX(CONVERT(VARCHAR(5),(CASE\n" +
+                "		WHEN DATEDIFF(\n" +
+                "			HOUR,\n" +
+                "			CAST(\n" +
+                "				a.deliv_end AS TIME\n" +
+                "			),\n" +
+                "			CAST(\n" +
+                "				'12:00' AS TIME\n" +
+                "			)\n" +
+                "		)< 1 THEN DATEADD(\n" +
+                "			HOUR,\n" +
+                "			- 1,\n" +
+                "			CAST(\n" +
+                "				a.deliv_end AS TIME\n" +
+                "			)\n" +
+                "		)\n" +
+                "		ELSE CAST(\n" +
+                "			a.deliv_end AS TIME\n" +
+                "		)\n" +
+                "	END ),\n" +
+                "	108 )) as deliv_end,\n" +
+                "	a.vehicle_type_list,\n" +
+                "	sum( a.total_kg ) total_kg,\n" +
+                "	sum( a.total_cubication ) total_cubication,\n" +
+                "	a.DeliveryDeadline,\n" +
+                "	a.DayWinStart,\n" +
+                "	a.DayWinEnd\n" +
+                "from\n" +
+                "	BOSNET1.dbo.TMS_PreRouteJob a inner join(\n" +
+                "		select\n" +
+                "			a.RunId,\n" +
+                "			a.customer_id,\n" +
+                "			count( a.DO_Number ) DO_Number,\n" +
+                "			MIN( Customer_priority ) Customer_priority\n" +
+                "		from\n" +
+                "			(\n" +
+                "				select\n" +
+                "					distinct RunId,\n" +
+                "					customer_id,\n" +
+                "					DO_Number,\n" +
+                "					Customer_priority\n" +
+                "				from\n" +
+                "					BOSNET1.dbo.TMS_PreRouteJob\n" +
+                "				where\n" +
+                "					isActive = '1'\n" +
+                "					and Is_Edit = 'edit'\n" +
+                "					and Is_Exclude = 'inc'\n" +
+                "			) a\n" +
+                "		group by\n" +
+                "			a.RunId,\n" +
+                "			a.customer_id\n" +
+                "	) q on\n" +
+                "	a.RunId = q.RunId\n" +
+                "	and a.Customer_ID = q.Customer_ID\n" +
+                "where\n" +
+                "	a.RunId = '" + cx.runID + "'\n" +
+                "	and a.isActive = '1'\n" +
+                "	and a.Is_Edit = 'edit'\n" +
+                "	and a.Is_Exclude = 'inc'\n" +
+                "group by\n" +
+                "	a.Customer_ID,\n" +
+                "	q.DO_Number,\n" +
+                "	a.Long,\n" +
+                "	a.Lat,\n" +
+                "	q.Customer_priority,\n" +
+                "	a.Service_time,\n" +
+                //"	a.deliv_start,\n" +
+                //"	a.deliv_end,\n" +
+                "	a.vehicle_type_list,\n" +
+                "	a.DeliveryDeadline,\n" +
+                "	a.DayWinStart,\n" +
+                "	a.DayWinEnd;";
+        System.out.println("sql " + sql);
 
         cx.log("Getting cust deliv: " + sql);
         try (PreparedStatement ps = con.prepareStatement(sql)){
@@ -1173,8 +1165,8 @@
                 "	a.costPerM,\n" +
                 "	a.costPerServiceMin,\n" +
                 "	a.costPerTravelMin,\n" +
-				"	a.agent_priority,\n" +
-				"	a.max_cust\n" +
+                "	a.agent_priority,\n" +
+                "	a.max_cust\n" +
                 " from\n" +
                 "	bosnet1.dbo.TMS_PreRouteVehicle a\n" +
                 " where\n" +
@@ -1224,8 +1216,8 @@
                     da.costPerDist = FZVrpUtil.getRsDouble(rs, i++, 0);
                     da.costPerServiceTime = FZVrpUtil.getRsDouble(rs, i++, 0);
                     da.costPerTravelTime = FZVrpUtil.getRsDouble(rs, i++, 0);
-					da.agentPriority = FZVrpUtil.getRsInt(rs, i++, 0);
-					da.maxCust = FZVrpUtil.getRsInt(rs, i++, 0);
+                    da.agentPriority = FZVrpUtil.getRsInt(rs, i++, 0);
+                    da.maxCust = FZVrpUtil.getRsInt(rs, i++, 0);
 
                     das.add(da);
                 }
